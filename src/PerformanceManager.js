@@ -28,43 +28,11 @@ class PerformanceManager extends EventEmitter {
     priceFeed.on('update', this.selfUpdate.bind(this))
   }
 
-  /**
-   * @param amount
-   * @param price
-   * @param leverage
+  /*
    * @returns {Error|null}
+   * @description always null
    */
-  canOpenOrder (amount, price, leverage) {
-    amount = new BigNumber(amount)
-    price = new BigNumber(price)
-
-    if (amount.isZero()) {
-      throw new Error('amount can not be zero')
-    }
-
-    const positionSize = this.positionSize()
-    const newPositionSize = positionSize.plus(amount)
-    if (this.maxPositionSize && newPositionSize.isGreaterThan(this.maxPositionSize)) {
-      return new Error(`order size exceeds maximum position size (order amount: ${amount}, current size: ${positionSize}, max size: ${this.maxPositionSize})`)
-    }
-
-    if (newPositionSize.isNegative()) {
-      return new Error('short positions are not allowed in this version')
-    }
-
-    // apply leverage to order cost calculation
-    const total = leverage ? amount.multipliedBy(price).dividedBy(leverage) : amount.multipliedBy(price)
-
-    const currentAllocation = this.currentAllocation(leverage)
-    const newAllocatedCapital = currentAllocation.plus(total)
-    if (newAllocatedCapital.isGreaterThan(this.allocation)) {
-      return new Error(`the order exceeds the allocation limit (order size: ${amount}, allocated: ${currentAllocation}, limit: ${this.allocation})`)
-    }
-
-    if (total.isGreaterThan(this.availableFunds)) {
-      return new Error(`the order exceeds available funds (order size: ${total}, available funds: ${this.availableFunds})`)
-    }
-
+  canOpenOrder() {
     return null
   }
 
@@ -92,12 +60,11 @@ class PerformanceManager extends EventEmitter {
     )
   }
 
-  addOrder (amount, price, leverage) {
+  addOrder(amount, price) {
     amount = new BigNumber(amount)
     price = new BigNumber(price)
 
-    // adjust order total if there's leverage set for the order
-    const total = leverage ? amount.multipliedBy(price).dividedBy(leverage) : amount.multipliedBy(price)
+    const total = amount.multipliedBy(price)
 
     if (amount.isPositive()) {
       this.availableFunds = this.availableFunds.minus(total)
@@ -107,7 +74,7 @@ class PerformanceManager extends EventEmitter {
     }
 
     if (this.positionSize().isLessThan(amount.abs())) {
-      throw new Error('short positions are not supported in this version')
+      return
     }
 
     this.availableFunds = this.availableFunds.plus(total.abs())

@@ -67,8 +67,12 @@ class PerformanceManager extends EventEmitter {
     const total = amount.multipliedBy(price)
 
     if (amount.isPositive()) {
-      if (this.availableFunds.isLessThan(total.abs())) {
-        throw new Error(`Invalid long amount. Trying to buy ${total.abs().toNumber()} of ${this.availableFunds.toNumber()}`)
+      if (this.availableFunds.toNumber() - total.toNumber() < 0) {
+        throw new Error(
+          `Invalid long amount. Trying to buy ${total
+            .abs()
+            .toString()} of ${this.availableFunds.toString()}`
+        );
       }
       this.availableFunds = this.availableFunds.minus(total)
       this.openOrders.push({ amount, price })
@@ -76,8 +80,12 @@ class PerformanceManager extends EventEmitter {
       return
     }
 
-    if (this.positionSize().isLessThan(amount.abs())) {
-      throw new Error(`Invalid short amount. Trying to sell ${amount.abs().toNumber()} of ${this.positionSize().toNumber()}`)
+    if (this.positionSize().toNumber() - amount.abs().toNumber() < 0) {
+      throw new Error(
+        `Invalid short amount. Trying to sell ${amount
+          .abs()
+          .toString()} of ${this.positionSize().toString()}`
+      );
     }
 
     this.availableFunds = this.availableFunds.plus(total.abs())

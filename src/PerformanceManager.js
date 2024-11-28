@@ -67,7 +67,7 @@ class PerformanceManager extends EventEmitter {
     const total = amount.multipliedBy(price)
 
     if (amount.isPositive()) {
-      if (this.availableFunds.toNumber() - total.toNumber() < 0) {
+      if (+this.availableFunds.toFixed(16) - +total.toFixed(16) < 0) {
         throw new Error(
           `Invalid long amount. Trying to buy ${total
             .abs()
@@ -80,7 +80,7 @@ class PerformanceManager extends EventEmitter {
       return
     }
 
-    if (this.positionSize().toNumber() - amount.abs().toNumber() < 0) {
+    if (+this.positionSize().toFixed(16) - +amount.abs().toFixed(16) < 0) {
       throw new Error(
         `Invalid short amount. Trying to sell ${amount
           .abs()

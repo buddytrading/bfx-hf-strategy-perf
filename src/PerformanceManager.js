@@ -24,6 +24,7 @@ class PerformanceManager extends EventEmitter {
     this.peak = new BigNumber(allocation)
     this.trough = new BigNumber(allocation)
     this.openOrders = []
+    this.se = 0.005 * allocation // 0.5% of input allocation
 
     priceFeed.on('update', this.selfUpdate.bind(this))
   }
@@ -67,7 +68,7 @@ class PerformanceManager extends EventEmitter {
     const total = amount.multipliedBy(price)
 
     if (amount.isPositive()) {
-      if (+this.availableFunds.toFixed(16) - +total.toFixed(16) < 0) {
+      if (+total.toFixed(16) - +this.availableFunds.toFixed(16) > this.se) {
         throw new Error(
           `Invalid long amount. Trying to buy ${total
             .abs()
@@ -80,7 +81,7 @@ class PerformanceManager extends EventEmitter {
       return
     }
 
-    if (+this.positionSize().toFixed(16) - +amount.abs().toFixed(16) < 0) {
+    if (+amount.abs().toFixed(16) - +this.positionSize().toFixed(16) > this.se) {
       throw new Error(
         `Invalid short amount. Trying to sell ${amount
           .abs()

@@ -69,11 +69,14 @@ class PerformanceManager extends EventEmitter {
 
     if (amount.isPositive()) {
       if (+total.toFixed(16) - +this.availableFunds.toFixed(16) > this.se) {
-        throw new Error(
-          `Invalid long amount. Trying to buy ${total
+        throw {
+          code: 'insufficient_fund_error',
+          message: `Invalid long amount. Trying to buy ${total
             .abs()
-            .toString()} of ${this.availableFunds.toString()}`
-        );
+            .toString()} of ${this.availableFunds.toString()}`,
+          availableBalance: this.availableFunds.toNumber(),
+          requiredBalance: total.abs().toNumber()
+        }
       }
       this.availableFunds = this.availableFunds.minus(total)
       this.openOrders.push({ amount, price })
@@ -82,11 +85,14 @@ class PerformanceManager extends EventEmitter {
     }
 
     if (+amount.abs().toFixed(16) - +this.positionSize().toFixed(16) > this.se) {
-      throw new Error(
-        `Invalid short amount. Trying to sell ${amount
+      throw {
+        code: 'insufficient_fund_error',
+        message: `Invalid short amount. Trying to sell ${amount
           .abs()
-          .toString()} of ${this.positionSize().toString()}`
-      );
+          .toString()} of ${this.positionSize().toString()}`,
+        availableBalance: this.positionSize().toNumber(),
+        requiredBalance: amount.abs().toNumber()
+      }
     }
 
     this.availableFunds = this.availableFunds.plus(total.abs())

@@ -25,9 +25,7 @@ class PriceFeed extends EventEmitter {
       this.dataPoints = [price]
       this.timeBucket = timeBucket
 
-      if (force) {
-        this.emit('update', price)
-      }
+      this.emit('update', price)
 
       const delay = (timeBucket * this.timeBucketSize) + this.timeBucketSize - mts
       this.timeout = setTimeout(this._sendAveragePrice.bind(this), delay)

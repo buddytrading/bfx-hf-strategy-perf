@@ -22,7 +22,7 @@ class PerformanceManager extends EventEmitter {
     this.priceFeed = priceFeed
     this.leverage = leverage
 
-    this.se = 0.005 * allocation // 0.5% of input allocation
+    this.se = new BigNumber(allocation).multipliedBy(0.005) // 0.5% of input allocation
     this.peak = new BigNumber(allocation)
     this.trough = new BigNumber(allocation)
     this.openOrders = []
@@ -63,7 +63,7 @@ class PerformanceManager extends EventEmitter {
     amount = new BigNumber(amount)
     price = new BigNumber(price)
 
-    const total = amount.multipliedBy(price).abs()
+    const total = amount.multipliedBy(price)
 
     if (total.isLessThan(10)) {
       throw {
@@ -72,8 +72,8 @@ class PerformanceManager extends EventEmitter {
       }
     }
 
-    if (amount.isPositive()) {
-      if (+total.toFixed(16) - +this.currentAllocations.toFixed(16) > this.se) {
+    if (this.openOrders.length === 0) {
+      if (total.abs().minus(this.currentAllocations).isGreaterThan(this.se)) {
         throw {
           code: 'insufficient_fund_error',
           message: `Invalid long amount. Trying to buy ${total
@@ -92,36 +92,45 @@ class PerformanceManager extends EventEmitter {
       return
     }
 
-    if (
-      +amount.abs().toFixed(16) - +this.positionSize().toFixed(16) >
-      this.se
-    ) {
-      throw {
-        code: 'insufficient_fund_error',
-        message: `Invalid short amount. Trying to sell ${amount
-          .abs()
-          .toString()} of ${this.positionSize().toString()}`,
-        availableBalance: this.positionSize().toNumber(),
-        requiredBalance: amount.abs().toNumber(),
-      }
-    }
 
-    while (!amount.isZero() && this.openOrders.length > 0) {
+    while ((!amount.isZero() || amount.isGreaterThan(this.se)) && this.openOrders.length > 0) {
       const order = this.openOrders.shift()
 
-      if (order.amount.isLessThanOrEqualTo(amount.abs())) {
-        amount = amount.plus(order.amount)
-      } else {
-        order.amount = order.amount.plus(amount)
+      // 1st order side is the same side with incomming order
+      // add incomming order into open orders
+      // ex: both buy or both sell
+      if (amount.multipliedBy(order.amount).isGreaterThan(0)) {
         this.openOrders.unshift(order)
+        this.openOrders.push({ amount, price })
         break
+      }
+
+      const remainAmount = order.amount.plus(amount)
+
+      // close order
+      if (remainAmount.isZero() || remainAmount.multipliedBy(price).abs().isLessThan(this.se)) {
+        break
+      } else {
+        // order amount > incomming order amount
+        if (remainAmount.isGreaterThan(0)) {
+          order.amount = remainAmount
+          this.openOrders.unshift(order)
+          break
+        }
+        // order amount < incomming order amount
+        else {
+          amount = remainAmount
+          // open new order with left over amount
+          if (this.openOrders.length === 0) {
+            this.openOrders.push({ amount, price })
+          }
+        }
       }
     }
 
     this.currentAllocations = this.currentAllocations
-      .plus(total)
-      .plus(this.currentAllocation())
-    const allocationPnl = this.currentAllocations.minus(this.allocation)
+      .minus(total)
+    const allocationPnl = this.currentAllocations.plus(this.currentAllocation()).minus(this.allocation)
     this.availableFunds = this.initialFunds.plus(allocationPnl)
 
     this.selfUpdate()

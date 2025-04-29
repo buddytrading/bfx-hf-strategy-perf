@@ -65,7 +65,7 @@ class PerformanceManager extends EventEmitter {
 
     const total = amount.multipliedBy(price)
 
-    if (total.abs().isLessThan(10)) {
+    if (total.abs().plus(this.se).isLessThan(10)) {
       throw {
         code: 'other_error',
         message: 'Your strategy is making order less than minimum order amount ($10) required by Exchanges, Please double check again!',

@@ -14,8 +14,8 @@ class AbstractWatcher extends EventEmitter {
   /**
    * @protected
    */
-  abortStrategy () {
-    this.emit('abort')
+  abortStrategy (error) {
+    this.emit('abort', error)
   }
 
   close () {

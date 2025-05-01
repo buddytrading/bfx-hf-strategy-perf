@@ -10,7 +10,7 @@ class DrawdownWatcher extends AbstractWatcher {
     const drawdown = this.performanceManager.drawdown()
 
     if (drawdown.isGreaterThanOrEqualTo(this.maxDrawdown)) {
-      this.abortStrategy()
+      this.abortStrategy(`Drawdown triggered: ${drawdown.toString()} >= ${this.maxDrawdown.toString()}`)
     }
   }
 }

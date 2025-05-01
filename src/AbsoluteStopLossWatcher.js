@@ -10,7 +10,7 @@ class AbsoluteStopLossWatcher extends AbstractWatcher {
     const unrealizedPnl = this.performanceManager.return()
 
     if (unrealizedPnl.isNegative() && unrealizedPnl.abs().isGreaterThanOrEqualTo(this.stopLoss)) {
-      this.abortStrategy()
+      this.abortStrategy(`Stop loss triggered: ${unrealizedPnl.toString()} >= ${this.stopLoss.toString()}`)
     }
   }
 }

@@ -44,7 +44,7 @@ module.exports = (performanceManager, abortStrategy, opts) => {
 
   watchers.forEach((watcher) => {
     watcher.start()
-    watcher.on('abort', () => abortStrategy(exitPositionMode))
+    watcher.on('abort', (error) => abortStrategy(exitPositionMode, error))
   })
 
   return watchers

@@ -7,8 +7,9 @@ class PerformanceManager extends EventEmitter {
    * @param maxPositionSize
    * @param allocation
    * @param leverage
+   * @param exchangeType
    */
-  constructor(priceFeed, { maxPositionSize, allocation, leverage = 1 }) {
+  constructor(priceFeed, { maxPositionSize, allocation, leverage = 1, exchangeType = 'CEX' }) {
     super()
     if (!allocation) {
       throw new Error('Capital Allocation is mandatory')
@@ -26,6 +27,7 @@ class PerformanceManager extends EventEmitter {
     this.peak = new BigNumber(allocation)
     this.trough = new BigNumber(allocation)
     this.openOrders = []
+    this.orderThreshold = exchangeType === 'CEX' ? 10 : 1
 
     priceFeed.on('update', this.selfUpdate.bind(this))
     priceFeed.on('update', this.checkLiquidation.bind(this))
@@ -65,10 +67,10 @@ class PerformanceManager extends EventEmitter {
 
     const total = amount.multipliedBy(price)
 
-    if (total.abs().plus(this.se).isLessThan(10)) {
+    if (total.abs().plus(this.se).isLessThan(this.orderThreshold)) {
       throw {
         code: 'other_error',
-        message: 'Your strategy is making order less than minimum order amount ($10) required by Exchanges, Please double check again!',
+        message: `Your strategy is making order less than minimum order amount ($${this.orderThreshold}) required by Exchanges, Please double check again!`,
       }
     }
 

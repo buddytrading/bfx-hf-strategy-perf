@@ -10,7 +10,7 @@ class PercentageStopLossWatcher extends AbstractWatcher {
     const unrealizedPerc = this.performanceManager.returnPerc()
 
     if (unrealizedPerc.isNegative() && unrealizedPerc.abs().isGreaterThanOrEqualTo(this.stopLoss)) {
-      this.abortStrategy(`Stop loss percentage triggered: ${unrealizedPerc.toString()} >= ${this.stopLoss.toString()}`)
+      this.abortStrategy(`The Stop loss is greater than Stop-loss level you have configured, please change your strategy logic OR increase your Stop loss Level`)
     }
   }
 }

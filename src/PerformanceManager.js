@@ -192,12 +192,8 @@ class PerformanceManager extends EventEmitter {
     if (!this.priceFeed.price) {
       return
     }
-    if (
-      this.priceFeed.price
-        .multipliedBy(this.positionSize())
-        .plus(this.currentAllocations)
-        .isLessThan(this.allocation.minus(this.initialFunds))
-    ) {
+    const marginAmount = this.initialFunds.multipliedBy(this.leverage - 1)
+    if (!marginAmount.isZero() && marginAmount.dividedBy(this.positionSize()).isLessThan(this.priceFeed.price)) {
       throw {
         code: 'insufficient_fund_error',
         message: 'Your account has been liquidated',

@@ -67,12 +67,12 @@ class PerformanceManager extends EventEmitter {
 
     const total = amount.multipliedBy(price)
 
-    if (total.abs().plus(this.se).isLessThan(this.orderThreshold)) {
-      throw {
-        code: 'other_error',
-        message: `Your strategy is making order less than minimum order amount ($${this.orderThreshold}) required by Exchanges, Please double check again!`,
-      }
-    }
+    // if (total.abs().plus(this.se).isLessThan(this.orderThreshold)) {
+    //   throw {
+    //     code: 'other_error',
+    //     message: `Your strategy is making order less than minimum order amount ($${this.orderThreshold}) required by Exchanges, Please double check again!`,
+    //   }
+    // }
 
     if (this.openOrders.length === 0) {
       if (total.abs().minus(this.currentAllocations).isGreaterThan(this.se)) {
@@ -92,6 +92,15 @@ class PerformanceManager extends EventEmitter {
       this.openOrders.push({ amount, price })
       this.selfUpdate()
       return
+    }
+
+    if (total.isGreaterThan(this.currentAllocations)) {
+      throw {
+        code: 'insufficient_fund_error',
+        message: `Insufficient funds. Trying to buy ${total.toFixed(4)} of ${this.currentAllocations.toFixed(4)}`,
+        availableBalance: this.currentAllocations.toNumber(),
+        requiredBalance: total.toNumber(),
+      }
     }
 
 

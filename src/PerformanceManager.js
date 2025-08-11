@@ -27,6 +27,7 @@ class PerformanceManager extends EventEmitter {
     this.peak = new BigNumber(allocation)
     this.trough = new BigNumber(allocation)
     this.openOrders = []
+    this.openLimitOrders = []
     this.orderThreshold = exchangeType === 'CEX' ? 10 : 1
 
     priceFeed.on('update', this.selfUpdate.bind(this))
@@ -59,6 +60,43 @@ class PerformanceManager extends EventEmitter {
       const orderCost = order.amount.multipliedBy(order.price)
       return alloc.plus(orderCost)
     }, new BigNumber(0))
+  }
+
+  addLimitOrder(amount, price) {
+    amount = new BigNumber(amount)
+    price = new BigNumber(price)
+
+    const total = amount.multipliedBy(price)
+    if (total.isGreaterThan(this.currentAllocations)) {
+      throw {
+        code: 'insufficient_fund_error',
+        message: `Insufficient funds. Trying to open limit order ${total.toFixed(4)}`,
+        availableBalance: this.currentAllocations.toNumber(),
+        requiredBalance: total.toNumber(),
+      }
+    }
+
+    this.currentAllocations = this.currentAllocations.minus(total)
+    this.openLimitOrders.push({ amount, price })
+
+    this.selfUpdate()
+  }
+
+  clearLimitOrder(candlePrice) {
+    for (let i = 0; i < this.openLimitOrders.length; i++) {
+      const order = this.openLimitOrders[i]
+      if (order.price.isGreaterThan(candlePrice)) continue
+
+      this.currentAllocations = this.currentAllocations.plus(
+        order.amount.multipliedBy(order.price)
+      )
+      this.addOrder(order.amount, order.price)
+
+      // Remove the order from openLimitOrders
+      this.openLimitOrders.splice(i, 1);
+      i--;
+    }
+    this.selfUpdate()
   }
 
   addOrder(amount, price) {

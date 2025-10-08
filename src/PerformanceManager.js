@@ -99,7 +99,7 @@ class PerformanceManager extends EventEmitter {
     this.selfUpdate()
   }
 
-  addOrder(amount, price) {
+  addOrder(amount, price, order_index = null) {
     amount = new BigNumber(amount)
     price = new BigNumber(price)
 
@@ -143,7 +143,13 @@ class PerformanceManager extends EventEmitter {
 
 
     while ((!amount.isZero() || amount.isGreaterThan(this.se)) && this.openOrders.length > 0) {
-      const order = this.openOrders.shift()
+      let order
+      if(order_index && order_index >= 0) {
+        order = this.openOrders[order_index]
+        this.openOrders.splice(order_index, 1)
+      } else {
+        order = this.openOrders.shift()
+      }
 
       // 1st order side is the same side with incomming order
       // add incomming order into open orders

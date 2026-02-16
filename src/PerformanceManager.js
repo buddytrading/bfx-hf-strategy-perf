@@ -268,7 +268,7 @@ class PerformanceManager extends EventEmitter {
     }
 
     if (netQty === 0) {
-      throw new Error("No net position — liquidation price does not exist");
+      return
     }
 
     const absQty = Math.abs(netQty);

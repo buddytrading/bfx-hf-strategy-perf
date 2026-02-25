@@ -193,9 +193,7 @@ class PerformanceManager extends EventEmitter {
     }
 
     this.currentAllocations = this.currentAllocations.minus(total);
-    const allocationPnl = this.currentAllocations
-      .plus(this.currentAllocation())
-      .minus(this.allocation);
+    const allocationPnl = this.currentAllocations.minus(this.allocation);
     this.availableFunds = this.initialFunds.plus(allocationPnl);
 
     this.selfUpdate();

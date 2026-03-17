@@ -1,6 +1,6 @@
 {
   "name": "bfx-hf-strategy-perf",
-  "version": "3.1.5",
+  "version": "bt-v3.1.0.15",
   "description": "",
   "scripts": {
     "lint": "standard",

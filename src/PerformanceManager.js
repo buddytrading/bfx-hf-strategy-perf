@@ -234,7 +234,14 @@ class PerformanceManager extends EventEmitter {
     if (equityCurve.isGreaterThanOrEqualTo(this.peak) || this.peak.isZero()) {
       return new BigNumber(0);
     }
-    return this.peak.minus(equityCurve).dividedBy(this.peak);
+    const drawdown = this.peak.minus(equityCurve).dividedBy(this.peak);
+    if (drawdown.isGreaterThan(1)) {
+      return new BigNumber(1);
+    }
+    if (drawdown.isLessThan(0)) {
+      return new BigNumber(0);
+    }
+    return drawdown;
   }
 
   /**
